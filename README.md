@@ -21,21 +21,21 @@ The goal is a lightweight, transparent layer that gives teams visibility and con
 
 ```
 ┌──────────────────┐     ┌───────────────────────────────────────────┐
-│                  │     │               LLMGuard Lite                │
+│                  │     │               LLMGuard Lite               │
 │   Application    │────▶│                                           │
 │  (any language)  │     │  1. Evaluate data-governance policies     │
 │                  │     │  2. Forward compliant requests upstream   │
 └──────────────────┘     │  3. Write structured audit log entry      │
-                          │                                           │
-                          └────────────┬──────────────┬──────────────┘
-                                       │              │
-                           ┌───────────▼──┐  ┌────────▼───────┐
-                           │ Anthropic API│  │   OpenAI API   │
-                           └──────────────┘  └────────────────┘
+                         │                                           │
+                         └────────────┬──────────────┬─────────────-─┘
+                                      │              │
+                           ┌──────────▼──┐  ┌────────▼───────┐
+                           │Anthropic API│  │   OpenAI API   │
+                           └─────────────┘  └────────────────┘
                                        │
                           ┌────────────▼──────────────────────────┐
-                          │        Dashboard  (Next.js)            │
-                          │   /admin/stats        /admin/logs      │
+                          │        Dashboard  (Next.js)           │
+                          │   /admin/stats        /admin/logs     │
                           └───────────────────────────────────────┘
 ```
 
