@@ -1,0 +1,42 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: llmguard-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://llmguard:llmguard@postgres:5432/llmguard
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/app:/app/app
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: llmguard-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  postgres:
+    image: postgres:16
+    container_name: llmguard-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: llmguard
+      POSTGRES_PASSWORD: llmguard
+      POSTGRES_DB: llmguard
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
