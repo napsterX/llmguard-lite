@@ -13,7 +13,8 @@ ANTHROPIC_ALLOWED_MODELS: frozenset[str] = frozenset(
         "claude-3-5-sonnet-latest",
         "claude-3-5-haiku-latest",
         "claude-sonnet-4-6",
-        "claude-3-5-sonnet-latest",
+        "claude-opus-4-7",
+        "claude-haiku-4-5-20251001",
     }
 )
 

@@ -223,7 +223,7 @@ This statement applies to the software and its maintainers only. It does not ext
 
 | Purpose | Channel |
 |---|---|
-| Security vulnerability reports | **security@your-org.example** (private, monitored) |
+| Security vulnerability reports | **security@hachira.com** (private, monitored) |
 | General bugs and feature requests | [GitHub Issues](../../issues) (public) |
 | Usage and integration questions | [GitHub Discussions](../../discussions) (public) |
 

@@ -1,5 +1,6 @@
 # LLMGuard Lite
 
+[![CI](https://github.com/napsterX/llmguard-lite/actions/workflows/ci.yml/badge.svg)](https://github.com/napsterX/llmguard-lite/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688)](https://fastapi.tiangolo.com)

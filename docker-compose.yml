@@ -3,6 +3,7 @@ services:
     build:
       context: ./backend
     container_name: llmguard-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     env_file:
@@ -10,7 +11,8 @@ services:
     environment:
       DATABASE_URL: postgresql://llmguard:llmguard@postgres:5432/llmguard
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./backend/app:/app/app
 
@@ -18,19 +20,18 @@ services:
     build:
       context: ./frontend
     container_name: llmguard-frontend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       FRONTEND_API_BASE_URL: http://backend:8000
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
   postgres:
     image: postgres:16
     container_name: llmguard-postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -39,6 +40,11 @@ services:
       POSTGRES_DB: llmguard
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U llmguard -d llmguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
