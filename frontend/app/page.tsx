@@ -1,4 +1,8 @@
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Resolved server-side only — no NEXT_PUBLIC_ prefix needed.
+// Docker Compose sets this to http://backend:8000 (service name).
+// Local development falls back to http://localhost:8000.
+const API =
+  process.env.FRONTEND_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
 interface Stats {
   total_requests: number;
@@ -19,13 +23,15 @@ interface LogEntry {
   latency_ms: number | null;
 }
 
-async function fetchStats(): Promise<Stats | null> {
+type FetchError = { unreachable: true; url: string };
+
+async function fetchStats(): Promise<Stats | FetchError> {
   try {
     const res = await fetch(`${API}/admin/stats`, { cache: "no-store" });
-    if (!res.ok) return null;
+    if (!res.ok) return { unreachable: true, url: API };
     return res.json();
   } catch {
-    return null;
+    return { unreachable: true, url: API };
   }
 }
 
@@ -40,24 +46,46 @@ async function fetchLogs(): Promise<LogEntry[]> {
   }
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white px-6 py-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
       <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{label}</p>
-      <p className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">{value}</p>
-      {sub && <p className="mt-1 text-xs text-zinc-400">{sub}</p>}
+      <p className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function BackendUnreachable({ url }: { url: string }) {
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-5 dark:border-amber-800 dark:bg-amber-950">
+      <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+        Backend unreachable
+      </p>
+      <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
+        Could not connect to <code className="font-mono">{url}</code>. Ensure the
+        backend is running and <code className="font-mono">FRONTEND_API_BASE_URL</code>{" "}
+        is set correctly.
+      </p>
     </div>
   );
 }
 
 export default async function Home() {
-  const [stats, logs] = await Promise.all([fetchStats(), fetchLogs()]);
+  const [statsResult, logs] = await Promise.all([fetchStats(), fetchLogs()]);
+
+  const statsError =
+    statsResult && "unreachable" in statsResult ? statsResult : null;
+  const stats = statsError ? null : (statsResult as Stats);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
       <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center gap-3">
-          <span className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">LLMGuard Lite</span>
+          <span className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            LLMGuard Lite
+          </span>
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
             OSS
           </span>
@@ -67,22 +95,26 @@ export default async function Home() {
       <main className="mx-auto max-w-6xl px-6 py-8 space-y-8">
         {/* Stats */}
         <section>
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-zinc-400">Overview</h2>
-          {stats ? (
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-zinc-400">
+            Overview
+          </h2>
+          {statsError ? (
+            <BackendUnreachable url={statsError.url} />
+          ) : stats ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <StatCard label="Total Requests" value={stats.total_requests.toLocaleString()} />
               <StatCard label="Allowed" value={stats.allowed_count.toLocaleString()} />
               <StatCard label="Blocked" value={stats.blocked_count.toLocaleString()} />
               <StatCard label="Avg Latency" value={`${stats.avg_latency_ms} ms`} />
             </div>
-          ) : (
-            <p className="text-sm text-zinc-400">Could not reach backend at {API}</p>
-          )}
+          ) : null}
         </section>
 
         {/* Logs */}
         <section>
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-zinc-400">Recent Requests</h2>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-zinc-400">
+            Recent Requests
+          </h2>
           <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead>
@@ -101,14 +133,19 @@ export default async function Home() {
                 {logs.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-6 text-center text-zinc-400">
-                      No requests logged yet.
+                      {statsError ? "Dashboard unavailable — backend not connected." : "No requests logged yet."}
                     </td>
                   </tr>
                 ) : (
                   logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                    <tr
+                      key={log.id}
+                      className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                    >
                       <td className="whitespace-nowrap px-4 py-3 text-zinc-500 dark:text-zinc-400">
-                        {log.created_at ? new Date(log.created_at).toLocaleTimeString() : "—"}
+                        {log.created_at
+                          ? new Date(log.created_at).toLocaleTimeString()
+                          : "—"}
                       </td>
                       <td className="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 capitalize">
                         {log.provider}

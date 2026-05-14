@@ -12,18 +12,21 @@ The dashboard fetches data from the backend admin endpoints at render time. It h
 ## Running locally
 
 ```bash
+cp .env.example .env.local   # safe default — no edit needed for local dev
 npm install
 npm run dev
 # → http://localhost:3000
 ```
 
-The backend must be running at `http://localhost:8000`, or set `NEXT_PUBLIC_API_URL` to point elsewhere.
+The backend must be running at `http://localhost:8000` (the default), or set `FRONTEND_API_BASE_URL` in `.env.local` to point elsewhere.
 
 ## Environment
 
 | Variable | Default | Description |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL |
+| `FRONTEND_API_BASE_URL` | `http://localhost:8000` | Backend API base URL — resolved server-side only |
+
+This variable is read exclusively by the Next.js server process, not the browser. No `NEXT_PUBLIC_` prefix is used because all data fetching is done in Server Components at render time.
 
 ## Stack
 

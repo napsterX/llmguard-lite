@@ -45,6 +45,54 @@ The goal is a lightweight, transparent layer that gives teams visibility and con
 
 ---
 
+## Architecture
+
+![Architecture](docs/images/architecture.png)
+
+*High-level request flow, policy enforcement pipeline, provider routing, audit logging, and dashboard visibility.*
+
+---
+
+## Docker Deployment
+
+![Docker Deployment](docs/images/docker-deploy.png)
+
+*Full local deployment using Docker Compose with backend, frontend, and PostgreSQL services running together.*
+
+---
+
+## Dashboard Overview
+
+![Dashboard Overview](docs/images/dashboard-overview.png)
+
+*Real-time operational visibility into allowed requests, blocked requests, policy categories, and request latency.*
+
+---
+
+## API Proxy Example
+
+![API Proxy Example](docs/images/api-demo.png)
+
+*Successful proxied Anthropic API request demonstrating compliant request forwarding through LLMGuard Lite.*
+
+---
+
+## Allowed Request Logging
+
+![Allowed Request Logging](docs/images/allowed-request.png)
+
+*Example of successful compliant request capture with full audit metadata.*
+
+---
+
+## Policy Enforcement Example
+
+![Policy Enforcement Example](docs/images/pii-block.png)
+
+*Demonstration of PII detection and policy-based blocking in production workflow.*
+
+---
+
 ## Current MVP features
 
 | Feature | Status |
@@ -147,6 +195,7 @@ uvicorn app.main:app --reload
 
 # 2. Frontend — separate terminal
 cd frontend
+cp .env.example .env.local    # defaults to http://localhost:8000 — no edit needed
 npm install
 npm run dev
 ```
@@ -204,6 +253,8 @@ Copy `backend/.env.example` to `backend/.env` before starting the backend.
 # DEBUG=false
 ```
 
+**Backend** (`backend/.env`):
+
 | Variable | Default | Required | Description |
 |---|---|---|---|
 | `DATABASE_URL` | `postgresql://llmguard:llmguard@localhost:5432/llmguard` | Yes | PostgreSQL connection string |
@@ -212,9 +263,17 @@ Copy `backend/.env.example` to `backend/.env` before starting the backend.
 | `APP_NAME` | `LLMGuard Lite` | No | Shown in auto-generated API docs at `/docs` |
 | `DEBUG` | `false` | No | FastAPI debug mode — keep `false` in production |
 
+**Frontend** (`frontend/.env.local`):
+
+| Variable | Default | Required | Description |
+|---|---|---|---|
+| `FRONTEND_API_BASE_URL` | `http://localhost:8000` | No | Backend API base URL — read server-side only |
+
+In Docker Compose, `FRONTEND_API_BASE_URL` is automatically set to `http://backend:8000` (the internal service name). No manual edit is needed for the Docker path.
+
 The database schema is created automatically on first startup. No separate migration step is needed for a fresh install.
 
-**Security note:** Never commit `.env` to version control. It is listed in `.gitignore` by default.
+**Security note:** Never commit `.env` or `.env.local` to version control. Both are listed in `.gitignore` by default.
 
 ---
 
